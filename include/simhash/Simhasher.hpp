@@ -14,6 +14,7 @@ namespace simhash
             jenkins _hasher;
             KeywordExtractor _extractor;
         public:
+            Simhasher(): _extractor("", "", "", "") {}
             Simhasher(const string& dictPath, const string& modelPath, const string& idfPath, const string& stopWords): _extractor(dictPath, modelPath, idfPath, stopWords)
             {}
             ~Simhasher(){};
@@ -22,7 +23,7 @@ namespace simhash
             {
                 return _extractor.Extract(text, res, topN);
             }
-            bool make(const string& text, size_t topN, vector<pair<uint64_t, double> >& res) const
+            bool _make(const string& text, size_t topN, vector<pair<uint64_t, double> >& res) const
             {
                 vector<pair<string, double> > wordweights;
                 if(!extract(text, wordweights, topN))
@@ -40,12 +41,12 @@ namespace simhash
                 return true;
             }
 
-            bool make(const string& text, size_t topN, uint64_t& v64) const
+            uint64_t make(const string& text, size_t topN) const
             {
                 vector<pair<uint64_t, double> > hashvalues;
-                if(!make(text, topN, hashvalues))
+                if(!_make(text, topN, hashvalues))
                 {
-                    return false;
+                    return 0;
                 }
                 vector<double> weights(BITS_LENGTH, 0.0);
                 const uint64_t u64_1(1);
@@ -57,7 +58,7 @@ namespace simhash
                     }
                 }
 
-                v64 = 0;
+                uint64_t v64 = 0;
                 for(size_t j = 0; j < BITS_LENGTH; j++)
                 {
                     if(weights[j] > 0.0)
@@ -66,7 +67,7 @@ namespace simhash
                     }
                 }
                 
-                return true;
+                return v64;
             }
             
             static bool isEqual(uint64_t lhs, uint64_t rhs, unsigned short n = 3)
